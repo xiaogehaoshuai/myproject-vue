@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style>
+
+			#canvas{
+				position: fixed;
+				left: 500px;
+				top: 200px;
+				border: 2px purple solid;
+				background-color: white;
+			}
+			#colorarea{
+				position: fixed;
+				left: 510px;
+				top: 50px;
+			}
+			.item{
+				width: 80px;
+				height: 70px;
+			}
+			#penweight{
+				position: fixed;
+				left: 510px;
+				top: 140px;
+			}
+			.btn{
+				width: 100px;
+				height: 45px;
+			}
+			#functionbtn{
+				position: fixed;
+				left: 1100px;
+				top:135px;
+			}
+			.fun{
+				width: 100px;
+				height: 55px;
+			}
+
+		</style>
+		<script type="text/javascript" src="js/draw.js" ></script>
+	</head>
+
+  <body>
+    <canvas id="canvas" width="800px" height="600px" style=""></canvas>
+    <div id="functionbtn">
+    <input type="button" value="清除画布" class="clear fun" onclick="clearb()" />
+    <input type="button" value="下载图片" class="downloadImageBtn fun" id="downloadImageBtn" />
+
+    </div>
+    <div id="penweight">
+    <input type="button" value="细" class="thin btn" onclick="checkpen(1)" />
+    <input type="button" value="中" class="middle btn" onclick="checkpen(5)" />
+    <input type="button" value="粗" class="bold btn" onclick="checkpen(10)" />
+    <input type="button" value="橡皮擦" class="eraser btn"   id="eraser" onclick="checkeraser()" />
+    <input type="button" value="取消橡皮擦" class="uneraser btn" id="uneraser" onclick="canceleraser()" />
+    </div>
+
+<!--    <div id="colorarea">-->
+<!--    <input type="button" value="黑" class="black item" style="background-color: black;border: none;" onclick="changecolor('black')" />-->
+<!--    </div>-->
+</body>
+<script>
+ 	var canvas = document.getElementById('canvas');
+	var cvs = canvas.getContext('2d');
+	var drawing =false;
+	//清除画布功能
+    function clearb (){
+
+    	cvs.clearRect(0,0,800,800);
+
+    }
+    //设置笔的粗细
+    function checkpen(width){
+    	cvs.lineWidth = width;
+
+    }
+    //设置颜色
+    function changecolor(pencolor){
+
+    	cvs.strokeStyle =pencolor;
+    }
+
+//选中橡皮擦
+function checkeraser(){
+document.getElementById("eraser").value = "正在使用...";
+cvs.lineWidth = 20;
+cvs.globalCompositeOperation = "destination-out";
+    function getBoundingClientRect(x,y){
+	var box = canvas.getBoundingClientRect();    //获取canvas的距离浏览器视窗的上下左右距离
+	return {x:x-box.left,
+			y:y-box.top
+	}
+}
+canvas.onmousedown = function(e){
+	var first = getBoundingClientRect(e.clientX,e.clientY);
+	cvs.save();
+	cvs.beginPath();
+	cvs.moveTo(first.x,first.y);
+	drawing = true;
+}
+canvas.onmousemove = function(e){
+	if(drawing){
+		var move = getBoundingClientRect(e.clientX,e.clientY);
+		cvs.save();
+		cvs.lineTo(move.x,move.y);
+		cvs.stroke()
+		cvs.restore()
+	}
+}
+canvas.onmouseup = function(){
+	drawing = false;
+}
+canvas.onmouseleave = function(){
+	drawing = false;
+	canvas.onmouseup();
+}
+}
+
+//取消橡皮擦
+function canceleraser(){
+	document.getElementById("eraser").value = "橡皮擦";
+	cvs.globalCompositeOperation = "destination-over";
+	cvs.lineWidth = 1;
+}
+//保存图片
+window.onload = function(){
+	var penWeight = 0;      //画笔粗细
+  var penColor = '';  //画笔颜色
+  canvas.onmousedown = function(e){
+        /*找到鼠标（画笔）的坐标*/
+        var start_x = e.clientX - canvas.offsetLeft + document.body.scrollLeft;
+        var start_y = e.clientY - canvas.offsetTop + document.body.scrollTop;
+
+        cvs.beginPath();    //开始本次绘画
+
+        cvs.moveTo(start_x, start_y);   //画笔起始点
+
+        /*设置画笔属性*/
+        cvs.lineCap = 'round';
+        cvs.lineJoin ="round";
+        cvs.strokeStyle = penColor;     //画笔颜色
+        cvs.lineWidth = penWeight;      //画笔粗细
+
+
+        canvas.onmousemove = function(e){
+
+            /*找到鼠标（画笔）的坐标*/
+            var move_x = e.clientX - canvas.offsetLeft + document.body.scrollLeft;
+            var move_y = e.clientY - canvas.offsetTop + document.body.scrollTop;
+
+            cvs.lineTo(move_x, move_y);     //根据鼠标路径绘画
+
+            cvs.stroke();   //立即渲染
+        }
+
+
+        canvas.onmouseup = function(e){
+
+            cvs.closePath();    //结束本次绘画
+
+            canvas.onmousemove = null;
+            canvas.onmouseup = null;
+        }
+        canvas.onmouseleave = function(){
+        	cvs.closePath();
+        	canvas.onmousemove = null;
+            canvas.onmouseup = null;
+        }
+    }
+
+	var dlButton = document.getElementById("downloadImageBtn");
+	bindButtonEvent(dlButton,"click",saveAsLocalImage)
+}
+
+function bindButtonEvent(element, type, handler) {
+            	   if(element.addEventListener) {
+            	      element.addEventListener(type, handler, false);
+            	   } else {
+            	      element.attachEvent('on'+type, handler);
+            	   }
+			}
+function saveAsLocalImage () {
+    var myCanvas = document.getElementById("canvas");
+    var image = myCanvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+    window.location.href=image; // it will save locally
+  }
+
+</script>
+</html>
